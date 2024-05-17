@@ -18,7 +18,7 @@ validate-rancher: validate test
 
 validate: fmtcheck lint vet
 
-package-rancher: 
+package-rancher:
 	@sh -c "'$(CURDIR)/scripts/gopackage.sh'"
 
 test: fmtcheck
@@ -27,13 +27,13 @@ test: fmtcheck
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
-testacc: 
+testacc:
 	@sh -c "'$(CURDIR)/scripts/gotestacc.sh'"
 
-docker-testacc: 
+docker-testacc:
 	@sh -c "'$(CURDIR)/scripts/gotestacc_docker.sh'"
 
-upgrade-rancher: 
+upgrade-rancher:
 	@sh -c "'$(CURDIR)/scripts/start_rancher.sh'"
 
 vet:
@@ -48,11 +48,14 @@ vet:
 	fi
 
 lint:
-	@echo "==> Checking that code complies with golint requirements..."
-	@GO111MODULE=off go get -u golang.org/x/lint/golint
-	@if [ -n "$$(golint $$(go list ./...) | grep -v 'should have comment.*or be unexported' | tee /dev/stderr)" ]; then \
+	@echo "==> Checking that code complies with golangci-lint requirements..."
+	@EXISTS=$(which golangci-lint)
+	@if [ -z "$EXISTS" ]; then \
+  		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.58.2; \
+	fi
+	@if [ -n "$$(golangci-lint run -n | tee /dev/stderr)" ]; then \
 		echo ""; \
-		echo "golint found style issues. Please check the reported issues"; \
+		echo "golangci-lint found style issues. Please check the reported issues"; \
 		echo "and fix them if necessary before submitting the code for review."; \
     	exit 1; \
 	fi
